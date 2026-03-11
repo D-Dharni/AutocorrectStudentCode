@@ -2,6 +2,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Comparator;
 
 /**
  * Autocorrect
@@ -50,6 +51,8 @@ public class Autocorrect {
             }
         }
 
+        compatibleWords.sort(Comparator.comparing(Word::getStr));
+        compatibleWords.sort(Comparator.comparing(Word::getEditDistance));
 
         // Convert the result to a string
         String[] arrayToReturn = new String[compatibleWords.size()];
@@ -69,11 +72,11 @@ public class Autocorrect {
         // Fill in all the base cases in the table
 
         // For deleting all of typed
-        for (int i = 0; i < lengthTyped; i++) {
+        for (int i = 0; i <= lengthTyped; i++) {
             tabulation[i][0] = i;
         }
         // For inserting all of word
-        for (int i = 0; i < lengthWord; i++) {
+        for (int i = 0; i <= lengthWord; i++) {
             tabulation[0][i] = i;
         }
 
