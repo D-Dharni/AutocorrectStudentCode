@@ -120,18 +120,6 @@ public class Autocorrect {
             arrayToReturn[i] = compatibleWords.get(i).getStr();
         }
 
-        // Temporary debug - paste this right before your return statement
-        ArrayList<String> expected = new ArrayList<>();
-// add a few words you know are missing to check
-        String[] checkWords = {"felo", "endo", "cento", "genro", "matlo", "minho"};
-        for (String check : checkWords) {
-            boolean found = false;
-            for (Word w : compatibleWords) {
-                if (w.getStr().equals(check)) { found = true; break; }
-            }
-            System.out.println(check + ": " + (found ? "FOUND" : "MISSING"));
-        }
-
         return arrayToReturn;
     }
 
