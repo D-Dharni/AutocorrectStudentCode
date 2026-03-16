@@ -22,10 +22,31 @@ public class Autocorrect {
 
     private String[] words;
     private int threshold;
+    private ArrayList<Integer>[] combinations;
 
     public Autocorrect(String[] words, int threshold) {
         this.words = words;
         this.threshold = threshold;
+
+        // Set up the combinations map
+        combinations = new ArrayList[676];
+
+        // Fill in each slot
+        for (int i = 0; i < 676; i++) {
+            combinations[i] = new ArrayList<Integer>();
+        }
+
+        // Loop through every word in the dictionary
+        for (int i = 0; i < words.length; i++) {
+            // Loop through each two letter combo
+            for (int j = 0; j < words[i].length() - 1; j++) {
+                int firstLetter = words[i].charAt(j) - 'a';
+                int secondLetter = words[i].charAt(j+1) - 'a';
+
+                int locationInMap = firstLetter * 26 + secondLetter;
+                combinations[locationInMap].add(i);
+            }
+        }
     }
 
     /**
@@ -38,18 +59,57 @@ public class Autocorrect {
         // Create an arraylist of words that work in threshold
         ArrayList<Word> compatibleWords = new ArrayList<Word>();
 
-        // Loop through each word in the dictionary and find the edit distance
-        for (String word: words) {
-            // Call helper function to find edit distance using tabulation approach
-            int distanceBetweenWords = findEditDistance(typed, word);
+        // Only use the combination map if the words are greater than 4
+        if (typed.length() > 4) {
+            // Find the two letter combinations for the word typed
+            ArrayList<Integer> potentialCandidates = new ArrayList<Integer>();
 
-            // Only add if it works for the threshold
-            if (distanceBetweenWords <= threshold) {
-                // Create new word object and add it
-                Word wordToAdd = new Word(word, distanceBetweenWords);
-                compatibleWords.add(wordToAdd);
+            for (int i = 0; i < typed.length() - 1; i++) {
+                int firstLetter = typed.charAt(i) - 'a';
+                int secondLetter = typed.charAt(i + 1) - 'a';
+
+                int slotInMap = firstLetter * 26 + secondLetter;
+
+                // Loop through all the possible word choices for that specific two letter combination
+                for (int j = 0; j < combinations[slotInMap].size(); j++) {
+                    // Get the actual word
+                    int index = combinations[slotInMap].get(j);
+
+                    // If it's not already there, then add it
+                    if (!potentialCandidates.contains(index)) {
+                        potentialCandidates.add(index);
+                    }
+                }
+            }
+
+            // Loop through each word in the new map to find edit distance
+            for (int index: potentialCandidates) {
+                // Call helper function to find edit distance using tabulation approach
+                int distanceBetweenWords = findEditDistance(typed, words[index]);
+
+                // Only add if it works for the threshold
+                if (distanceBetweenWords <= threshold) {
+                    // Create new word object and add it
+                    Word wordToAdd = new Word(words[index], distanceBetweenWords);
+                    compatibleWords.add(wordToAdd);
+                }
             }
         }
+        else {
+            // Loop through each word in the dictionary and find the edit distance
+            for (String word: words) {
+                // Call helper function to find edit distance using tabulation approach
+                int distanceBetweenWords = findEditDistance(typed, word);
+
+                // Only add if it works for the threshold
+                if (distanceBetweenWords <= threshold) {
+                    // Create new word object and add it
+                    Word wordToAdd = new Word(word, distanceBetweenWords);
+                    compatibleWords.add(wordToAdd);
+                }
+            }
+        }
+
 
         compatibleWords.sort(Comparator.comparing(Word::getStr));
         compatibleWords.sort(Comparator.comparing(Word::getEditDistance));
@@ -59,6 +119,19 @@ public class Autocorrect {
         for (int i = 0; i < compatibleWords.size(); i++) {
             arrayToReturn[i] = compatibleWords.get(i).getStr();
         }
+
+        // Temporary debug - paste this right before your return statement
+        ArrayList<String> expected = new ArrayList<>();
+// add a few words you know are missing to check
+        String[] checkWords = {"felo", "endo", "cento", "genro", "matlo", "minho"};
+        for (String check : checkWords) {
+            boolean found = false;
+            for (Word w : compatibleWords) {
+                if (w.getStr().equals(check)) { found = true; break; }
+            }
+            System.out.println(check + ": " + (found ? "FOUND" : "MISSING"));
+        }
+
         return arrayToReturn;
     }
 
