@@ -3,6 +3,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Scanner;
 
 /**
  * Autocorrect
@@ -43,6 +44,12 @@ public class Autocorrect {
                 int firstLetter = words[i].charAt(j) - 'a';
                 int secondLetter = words[i].charAt(j+1) - 'a';
 
+                // Skip if the character isn't a lowercase letter because some words in dictionary could have hyphen, etc.
+                if (firstLetter < 0 || firstLetter > 26 || secondLetter < 0 || secondLetter > 26) {
+                    continue;
+                }
+
+                // Use * 26 + letter as a formula to fill in
                 int locationInMap = firstLetter * 26 + secondLetter;
                 combinations[locationInMap].add(i);
             }
@@ -110,7 +117,7 @@ public class Autocorrect {
             }
         }
 
-
+        // Sort the lists properly using comparator
         compatibleWords.sort(Comparator.comparing(Word::getStr));
         compatibleWords.sort(Comparator.comparing(Word::getEditDistance));
 
@@ -166,6 +173,36 @@ public class Autocorrect {
         return tabulation[lengthTyped][lengthWord];
     }
 
+    public static void main (String[] args) {
+        // Initialize all the relevant variables
+        String[] dictionary = loadDictionary("Large");
+        Autocorrect autocorrect = new Autocorrect(dictionary, 2);
+        Scanner scanner = new Scanner(System.in);
+
+        while (true) {
+            // Print not print ln because I want not space
+            System.out.print("Enter a word: ");
+
+            // Lowercase it in case the user starts their thing with uppercase so the - 'a' doesn't fail
+            String typed = scanner.nextLine().toLowerCase();
+            String[] compatibleWords = autocorrect.runTest(typed);
+            System.out.println("------------");
+
+            // Print out the valid words
+            if (compatibleWords.length == 0) {
+                System.out.println("Sorry, there are no compatible words");
+            }
+            else {
+                System.out.println("Did you mean...");
+                for (String word: compatibleWords) {
+                    System.out.println(" " + word);
+                }
+            }
+
+            System.out.println("------------");
+        }
+
+    }
 
     /**
      * Loads a dictionary of words from the provided textfiles in the dictionaries directory.
